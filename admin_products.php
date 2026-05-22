@@ -20,7 +20,8 @@ $products = $stmt->fetchAll();
     </div>
 
     <div class="bg-white rounded-xl shadow-sm border overflow-hidden">
-        <table class="w-full text-left">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left min-w-[600px]">
             <thead class="bg-gray-50 border-b">
                 <tr>
                     <th class="px-6 py-4 font-bold">ID</th>
@@ -45,6 +46,7 @@ $products = $stmt->fetchAll();
                 <?php endforeach; ?>
             </tbody>
         </table>
+        </div>
     </div>
 </div>
 

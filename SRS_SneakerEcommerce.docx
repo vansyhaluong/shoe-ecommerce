@@ -1,0 +1,269 @@
+# **Software Requirements Specification (SRS)**
+
+**Project:** Sneaker E‑Commerce Platform (Nike + GOAT Inspired)
+**Document:** SRS_SneakerEcommerce.docx
+
+---
+
+## 1. Cover Page
+- **Project Title:** Sneaker E‑Commerce Platform
+- **Student Name:** *[Placeholder]*
+- **Student ID:** *[Placeholder]*
+- **Subject:** *[Placeholder]*
+- **Instructor:** *[Placeholder]*
+- **School:** *[Placeholder]*
+- **Academic Year:** *[Placeholder]*
+
+---
+
+## 2. Table of Contents
+1. Cover Page ...................................................... 1
+2. Table of Contents .............................................. 2
+3. Introduction ..................................................... 3
+4. Overall Description ........................................... 4
+5. Functional Requirements ....................................... 6
+6. Non‑Functional Requirements ................................. 13
+7. Database Design ................................................. 16
+8. Prototype / UI Mockup ......................................... 18
+9. Use‑Case Diagram .............................................. 22
+10. Activity Diagrams ........................................... 23
+11. Constraints .................................................. 27
+12. Security Requirements ...................................... 28
+13. Responsive Design ........................................... 30
+14. Future Improvements ........................................ 31
+15. Conclusion ................................................... 32
+
+---
+
+## 3. Introduction
+### 3.1 Purpose
+This SRS describes the functional and non‑functional requirements for the **Sneaker E‑Commerce Platform**, a modern web application that enables guests and registered users to browse, purchase, and manage sneaker products, as well as provides an administrative backend for store management.
+
+### 3.2 Scope
+The system supports:
+- Public product browsing and filtering.
+- User registration, authentication, and session management.
+- Shopping cart, checkout, order history, invoice generation, and return handling.
+- Wishlist functionality.
+- Product comments/reviews.
+- Admin dashboard for product, order, brand, category, return, and user management.
+- A lightweight AI‑style chat support widget.
+
+### 3.3 Objectives
+- Deliver a responsive, high‑performance web portal using PHP, MySQL, Tailwind CSS, and JavaScript.
+- Ensure data integrity and security via PDO prepared statements and role‑based access control.
+- Provide a polished UI inspired by Nike and GOAT.
+
+### 3.4 Target Users
+| Role | Description |
+|------|-------------|
+| Guest | Visitor who can browse products, view details, and use the chat widget. |
+| Registered User | Customer with an account able to login, add items to cart, checkout, manage wishlist, view invoices, and post reviews. |
+| Administrator | Store manager who can manage inventory, orders, returns, users, and generate reports. |
+
+### 3.5 System Overview
+The platform follows a classic three‑tier architecture:
+- **Presentation Layer:** HTML + Tailwind‑styled components rendered by PHP.
+- **Application Layer:** PHP scripts using PDO for database interaction, session handling, and business logic.
+- **Data Layer:** MySQL database (`shopgiay.sql`).
+
+---
+
+## 4. Overall Description
+### 4.1 Product Perspective
+The platform is a stand‑alone web application hosted on a LAMP stack. It re‑uses existing open‑source libraries for UI (Tailwind) and relies on custom PHP code for all business processes.
+
+### 4.2 Product Functions
+| Module | Primary Functions |
+|--------|-------------------|
+| **Home / Guest** | Browse home, view featured products, navigate to other pages, access chat. |
+| **Product Catalog** | List products, filter by brand/category, view product detail, see images, read reviews. |
+| **Authentication** | Register, login, password reset, session management. |
+| **Cart & Checkout** | Add to cart, modify quantity, apply size, calculate totals, submit order, capture shipping data. |
+| **Order Management** | Store order, order items, status transitions, generate printable invoice, allow return requests. |
+| **Wishlist** | Add/remove items, view wishlist, move items to cart. |
+| **Reviews** | Submit text comments, display existing comments, simple moderation by admin. |
+| **Admin Dashboard** | Overview statistics, quick links, recent orders table. |
+| **Admin Product Management** | CRUD on products, brands, categories, upload images, set stock. |
+| **Admin Order Management** | View/edit order status, export to Excel. |
+| **Admin Return Management** | View/approve/decline return requests, update inventory. |
+| **Chat Support** | Lightweight chat widget, store messages in `messages` table, admin can reply. |
+
+### 4.3 User Classes and Roles
+- **Guest** – No authentication, read‑only access.
+- **User** – Authenticated (`role='user'`). Can perform all customer‑side actions.
+- **Admin** – Authenticated (`role='admin'`). Full access to admin modules.
+
+### 4.4 Operating Environment
+- **Server:** Apache/NGINX on Windows (development) or Linux (production).
+- **Language:** PHP 8.x with PDO extension.
+- **Database:** MySQL 8.x.
+- **Client:** Modern browsers (Chrome, Edge, Firefox) supporting HTML5, CSS3, JavaScript ES6.
+
+### 4.5 Assumptions and Dependencies
+- PHP `session_start()` is correctly configured.
+- Tailwind CSS is compiled and available via CDN.
+- Email service for password reset is configured but not part of this SRS.
+- Payment gateway integration is planned for a future sprint (currently a placeholder form).
+
+---
+
+## 5. Functional Requirements
+> **NOTE:** Requirements are grouped by **Sprint** to aid agile planning.
+
+### Sprint 1 – Core Public Experience
+| ID | Description |
+|----|-------------|
+| **FR‑1.1** | **Home Page** – Display navigation bar, hero banner, featured sneaker grid (4 items), and footer. *(Mockup: ![Home](file:///C:/Users/admin/.gemini/antigravity/brain/6fe8823d-caeb-40c0-8712-7f7fe9320d48/mockup_homepage_1779444771486.png))* |
+| **FR‑1.2** | **Products Page** – List all sneakers with pagination, filter sidebar (brand, category), quick‑add‑to‑cart button. *(Mockup: ![Products](file:///C:/Users/admin/.gemini/antigravity/brain/6fe8823d-caeb-40c0-8712-7f7fe9320d48/mockup_products_1779444793552.png))* |
+| **FR‑1.3** | **Product Detail** – Show large image, gallery, name, brand, price, description, size selector, add‑to‑cart, wishlist toggle, and a **Comments/Reviews** section (user can submit a comment). *(Mockup: ![Detail](file:///C:/Users/admin/.gemini/antigravity/brain/6fe8823d-caeb-40c0-8712-7f7fe9320d48/mockup_product_detail_1779444831435.png))* |
+| **FR‑1.4** | **Chat Support** – Accessible from any page via a floating widget; messages stored in `messages` table. |
+| **FR‑1.5** | **User Registration / Login** – Secure password hashing, validation, and session creation. |
+
+### Sprint 2 – Shopping Cart & Checkout
+| ID | Description |
+|----|-------------|
+| **FR‑2.1** | **Cart Page** – List selected items, allow quantity change, remove items, display subtotal, shipping estimate, total, and proceed to checkout. *(Mockup: ![Cart](file:///C:/Users/admin/.gemini/antigravity/brain/6fe8823d-caeb-40c0-8712-7f7fe9320d48/mockup_cart_1779444855963.png))* |
+| **FR‑2.2** | **Checkout Page** – Capture shipping name, phone, address; display order summary; simple credit‑card placeholder form; “Place Order” button creates an entry in `orders` and `order_items`. *(Mockup: ![Checkout](file:///C:/Users/admin/.gemini/antigravity/brain/6fe8823d-caeb-40c0-8712-7f7fe9320d48/mockup_checkout_1779444879831.png))* |
+| **FR‑2.3** | **Order Confirmation** – After successful checkout, redirect to `order_success.php` with order ID.
+| **FR‑2.4** | **Invoice Generation** – Generate a printable invoice page with order details, accessible from “My Orders”. *(Mockup: ![Invoice](file:///C:/Users/admin/.gemini/antigravity/brain/6fe8823d-caeb-40c0-8712-7f7fe9320d48/mockup_invoice_1779444904164.png))* |
+
+### Sprint 3 – User Account & Wishlist
+| ID | Description |
+|----|-------------|
+| **FR‑3.1** | **My Orders Page** – List past orders with status, link to printable invoice.
+| **FR‑3.2** | **Wishlist Page** – Show favourite items, allow removal or move to cart. *(Implemented in `wishlist.php`)*
+| **FR‑3.3** | **Profile Settings** – Edit user profile, change password.
+
+### Sprint 4 – Admin Functionality
+| ID | Description |
+|----|-------------|
+| **FR‑4.1** | **Admin Dashboard** – Display revenue, total orders, product count, user count, and recent orders table. *(Mockup: ![Admin Dashboard](file:///C:/Users/admin/.gemini/antigravity/brain/6fe8823d-caeb-40c0-8712-7f7fe9320d48/mockup_admin_dashboard_1779444951765.png))* |
+| **FR‑4.2** | **Product Management** – CRUD interface for products, including image upload, brand/category selection, stock management. *(Mockup: ![Product Mgmt](file:///C:/Users/admin/.gemini/antigravity/brain/6fe8823d-caeb-40c0-8712-7f7fe9320d48/mockup_admin_product_management_1779444979308.png))* |
+| **FR‑4.3** | **Order Management** – View all orders, change status (`pending`, `processing`, `completed`, `cancelled`), export to Excel (`export_orders_excel.php`). |
+| **FR‑4.4** | **Return Request Management** – View/approve/decline return requests, update inventory accordingly. |
+| **FR‑4.5** | **Brand & Category Management** – Add, edit, delete brands and categories.
+| **FR‑4.6** | **Chat Admin Panel** – View chat history, reply to user messages.
+
+### Sprint 5 – Reviews & Additional Enhancements
+| ID | Description |
+|----|-------------|
+| **FR‑5.1** | **Product Comments/Reviews** – Authenticated users can post a text comment (stored in `messages` table with `is_from_admin = 0`). Reviews appear below product description on the detail page.
+| **FR‑5.2** | **Export Reports** – Admin can export order data (CSV/Excel) for accounting.
+| **FR‑5.3** | **Responsive Enhancements** – Ensure all pages adapt to mobile, tablet, and desktop breakpoints.
+
+---
+
+## 6. Non‑Functional Requirements
+### 6.1 Performance
+- Page load ≤ 2 seconds on a 3 G network (cached assets).
+- Database queries use indexed columns (`id`, `brand_id`, `category_id`).
+
+### 6.2 Security
+- All DB access via PDO prepared statements.
+- Passwords hashed with `password_hash()` (BCRYPT).
+- Session‑based authentication with regeneration on login.
+- Role‑based access control enforced in every admin script (`check_admin()`).
+- Input validation/sanitisation on all forms.
+
+### 6.3 Responsiveness
+- Mobile (≤ 640 px): single‑column layout, collapsible navigation.
+- Tablet (641‑1024 px): two‑column product grid.
+- Desktop (≥ 1025 px): four‑column product grid.
+
+### 6.4 Usability
+- Consistent Tailwind‑styled components.
+- Clear error messages and form validation feedback.
+- Keyboard‑accessible navigation.
+
+### 6.5 Maintainability
+- Separate concerns: `config.php` for DB, `header.php`/`footer.php` for layout, reusable functions in `functions.php`.
+- Code follows PSR‑12 style guidelines.
+
+---
+
+## 7. Database Design
+![ER Diagram](file:///C:/Users/admin/.gemini/antigravity/brain/6fe8823d-caeb-40c0-8712-7f7fe9320d48/er_diagram_1779444745300.png)
+
+**Key Relationships**
+- `products` → `brands` (FK `brand_id`), `categories` (FK `category_id`).
+- `product_images` → `products` (FK `product_id`).
+- `orders` → `users` (FK `user_id`).
+- `order_items` → `orders` (FK `order_id`) and `products` (FK `product_id`).
+- `messages` → `users` (FK `user_id`), optional `session_id` for guest chats.
+- `wishlist` (if exists) → `users` and `products`.
+
+---
+
+## 8. Prototype / UI Mockup
+| Page | Mockup |
+|------|--------|
+| Homepage | ![Homepage](file:///C:/Users/admin/.gemini/antigravity/brain/6fe8823d-caeb-40c0-8712-7f7fe9320d48/mockup_homepage_1779444771486.png) |
+| Products | ![Products](file:///C:/Users/admin/.gemini/antigravity/brain/6fe8823d-caeb-40c0-8712-7f7fe9320d48/mockup_products_1779444793552.png) |
+| Product Detail | ![Detail](file:///C:/Users/admin/.gemini/antigravity/brain/6fe8823d-caeb-40c0-8712-7f7fe9320d48/mockup_product_detail_1779444831435.png) |
+| Cart | ![Cart](file:///C:/Users/admin/.gemini/antigravity/brain/6fe8823d-caeb-40c0-8712-7f7fe9320d48/mockup_cart_1779444855963.png) |
+| Checkout / Payment | ![Checkout](file:///C:/Users/admin/.gemini/antigravity/brain/6fe8823d-caeb-40c0-8712-7f7fe9320d48/mockup_checkout_1779444879831.png) |
+| Invoice | ![Invoice](file:///C:/Users/admin/.gemini/antigravity/brain/6fe8823d-caeb-40c0-8712-7f7fe9320d48/mockup_invoice_1779444904164.png) |
+| Admin Dashboard | ![Admin Dashboard](file:///C:/Users/admin/.gemini/antigravity/brain/6fe8823d-caeb-40c0-8712-7f7fe9320d48/mockup_admin_dashboard_1779444951765.png) |
+| Admin Product Management | ![Product Mgmt](file:///C:/Users/admin/.gemini/antigravity/brain/6fe8823d-caeb-40c0-8712-7f7fe9320d48/mockup_admin_product_management_1779444979308.png) |
+| Chat Support | *(Floating widget embedded on all pages – visual omitted)* |
+
+---
+
+## 9. Use‑Case Diagram
+![Guest Use‑Case](file:///C:/Users/admin/.gemini/antigravity/brain/6fe8823d-caeb-40c0-8712-7f7fe9320d48/usecase_guest_1779444924951.png)
+![User Use‑Case](file:///C:/Users/admin/.gemini/antigravity/brain/6fe8823d-caeb-40c0-8712-7f7fe9320d48/usecase_user_1779444997214.png)
+
+---
+
+## 10. Activity Diagrams
+### 10.1 Order Workflow
+![Order Activity](file:///C:/Users/admin/.gemini/antigravity/brain/6fe8823d-caeb-40c0-8712-7f7fe9320d48/activity_order.png)
+### 10.2 Return Request Workflow
+![Return Activity](file:///C:/Users/admin/.gemini/antigravity/brain/6fe8823d-caeb-40c0-8712-7f7fe9320d48/activity_return.png)
+
+---
+
+## 11. Constraints
+- Only logged‑in users may place orders or submit reviews.
+- Admins are the only role that can export orders to Excel.
+- Users can print invoices **only** for their own completed orders.
+- Return requests are allowed **only** for orders with status `completed` and within a 30‑day window.
+- All database interactions use PDO prepared statements.
+- Session‑based authentication with timeout of 30 minutes.
+
+---
+
+## 12. Security Requirements
+- **Authentication:** Secure login with hashed passwords, session regeneration.
+- **Authorization:** Role checks (`admin` vs `user`) on every protected endpoint.
+- **Input Validation:** Server‑side validation for all form fields (e.g., email format, numeric price).
+- **Data Protection:** Sensitive data (passwords) never logged; HTTPS mandatory in production.
+- **Invoice Access:** Invoice pages verify `user_id` matches the logged‑in user.
+
+---
+
+## 13. Responsive Design
+| Device | Layout Adjustments |
+|--------|-------------------|
+| **Mobile** (≤ 640 px) | Hamburger menu, single‑column product grid, collapsible filter sidebar. |
+| **Tablet** (641‑1024 px) | Two‑column grid, side navigation remains visible, larger touch targets. |
+| **Desktop** (≥ 1025 px) | Four‑column grid, full navigation bar, hover effects on cards. |
+
+---
+
+## 14. Future Improvements
+- Integration with a real payment gateway (Stripe/PayPal).
+- AI‑powered chatbot with natural language understanding.
+- Full product rating system (stars) and moderated reviews.
+- Loyalty program with points and rewards.
+- Automated email notifications for order status changes.
+
+---
+
+## 15. Conclusion
+The Sneaker E‑Commerce Platform delivers a complete, responsive, and secure online shopping experience aligned with modern design trends and academic standards. This SRS provides a solid foundation for sprint‑based development, testing, and future expansion.
+
+---
+
+*Document generated on 2026‑05‑22.*

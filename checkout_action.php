@@ -20,7 +20,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     // Tính tổng tiền
     $total_amount = 0;
-    foreach ($_SESSION['cart'] as $id => $qty) {
+    foreach ($_SESSION['cart'] as $cartKey => $qty) {
+        $parts = explode('_', $cartKey);
+        $id = (int)$parts[0];
+        
         $stmt = $pdo->prepare("SELECT price FROM products WHERE id = ?");
         $stmt->execute([$id]);
         $p = $stmt->fetch();
@@ -41,13 +44,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $order_id = $pdo->lastInsertId();
 
         // 2. Lưu vào bảng order_items
-        foreach ($_SESSION['cart'] as $id => $qty) {
+        foreach ($_SESSION['cart'] as $cartKey => $qty) {
+            $parts = explode('_', $cartKey);
+            $id = (int)$parts[0];
+            $size = isset($parts[1]) ? (int)$parts[1] : 40;
+
             $stmt = $pdo->prepare("SELECT price FROM products WHERE id = ?");
             $stmt->execute([$id]);
             $p = $stmt->fetch();
             if ($p) {
-                $item_stmt = $pdo->prepare("INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)");
-                $item_stmt->execute([$order_id, $id, $qty, $p['price']]);
+                $item_stmt = $pdo->prepare("INSERT INTO order_items (order_id, product_id, quantity, price, size) VALUES (?, ?, ?, ?, ?)");
+                $item_stmt->execute([$order_id, $id, $qty, $p['price'], $size]);
             }
         }
 

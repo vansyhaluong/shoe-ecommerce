@@ -91,15 +91,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
                 <div class="divide-y divide-slate-50">
                     <?php foreach($items as $item): ?>
-                    <div class="p-8 flex items-center gap-6 group hover:bg-slate-50 transition-colors">
+                    <div class="p-8 flex flex-col sm:flex-row items-center sm:items-center gap-6 group hover:bg-slate-50 transition-colors">
                         <div class="w-24 h-24 bg-slate-50 rounded-2xl overflow-hidden flex-shrink-0 border border-slate-100 p-2">
                             <img src="<?= !empty($item['image_url']) ? 'public' . $item['image_url'] : 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80' ?>" class="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500">
                         </div>
-                        <div class="flex-grow">
-                            <h4 class="font-black text-dark text-lg mb-1 leading-tight"><?= htmlspecialchars($item['name']) ?></h4>
-                            <p class="text-sm font-bold text-slate-400 italic"><?= format_price($item['price']) ?> x <?= $item['quantity'] ?></p>
+                        <div class="flex-grow w-full text-center sm:text-left">
+                            <h4 class="font-black text-dark text-lg mb-1 leading-tight uppercase italic"><?= htmlspecialchars($item['name']) ?></h4>
+                            <div class="flex flex-col gap-1 mt-1 items-center sm:items-start">
+                                <p class="text-sm font-bold text-slate-400 italic"><?= format_price($item['price']) ?> x <?= $item['quantity'] ?></p>
+                                <?php if(!empty($item['size'])): ?>
+                                    <span class="text-xs font-black text-indigo-500 uppercase tracking-widest bg-indigo-50 px-2.5 py-0.5 rounded w-fit">Size: <?= $item['size'] ?></span>
+                                <?php endif; ?>
+                            </div>
                         </div>
-                        <div class="text-right">
+                        <div class="text-center sm:text-right w-full sm:w-auto border-t sm:border-none pt-4 sm:pt-0">
                             <span class="text-lg font-black text-dark italic"><?= format_price($item['price'] * $item['quantity']) ?></span>
                         </div>
                     </div>

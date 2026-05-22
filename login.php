@@ -25,23 +25,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 ?>
 
-<div class="container mx-auto px-4 py-12">
-    <div class="max-w-md mx-auto bg-white p-8 rounded-xl shadow-sm border">
-        <h2 class="text-3xl font-bold mb-6 text-center">Đăng nhập</h2>
+<div class="container mx-auto px-4 py-16 flex items-center justify-center min-h-[calc(100vh-200px)]">
+    <div class="w-full max-w-lg bg-white p-10 md:p-12 rounded-[2.5rem] shadow-2xl border border-slate-100 hover:shadow-indigo-500/5 transition-all duration-500">
+        <div class="text-center mb-10">
+            <span class="bg-indigo-50 text-indigo-600 text-[10px] font-bold px-4 py-1.5 rounded-full uppercase tracking-[0.15em] mb-4 inline-block font-display">Welcome Back</span>
+            <h2 class="text-3xl sm:text-4xl font-extrabold text-dark mb-3 uppercase tracking-tight font-display">ĐĂNG <span class="text-indigo-600">NHẬP</span></h2>
+            <p class="text-slate-400 text-xs sm:text-sm font-medium font-sans">Truy cập để tiếp tục mua sắm những mẫu Sneaker đỉnh cao</p>
+        </div>
+
         <?php if($error): ?>
-            <p class="text-red-500 mb-4 text-center"><?= $error ?></p>
+            <div class="bg-rose-50 border border-rose-100 text-rose-600 px-5 py-4 rounded-2xl text-center text-xs font-bold mb-6 font-sans">
+                <?= $error ?>
+            </div>
         <?php endif; ?>
-        <form method="POST" class="space-y-4">
+
+        <form method="POST" class="space-y-6">
             <div>
-                <label class="block mb-1 font-bold">Tên đăng nhập</label>
-                <input type="text" name="username" required class="w-full border rounded-lg px-3 py-2" placeholder="Nhập tên đăng nhập...">
+                <label class="block premium-label mb-2.5">Tên đăng nhập</label>
+                <input type="text" name="username" required class="w-full bg-slate-50 border border-slate-200 focus:border-indigo-500 hover:border-slate-300 rounded-2xl px-5 py-4 text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all font-sans" placeholder="Nhập tên đăng nhập...">
             </div>
+            
             <div>
-                <label class="block mb-1 font-bold">Mật khẩu</label>
-                <input type="password" name="password" required class="w-full border rounded-lg px-3 py-2">
+                <div class="flex justify-between items-center mb-2.5">
+                    <label class="block premium-label">Mật khẩu</label>
+                    <a href="forgot_password.php" class="text-xs font-bold text-indigo-600 hover:underline premium-btn tracking-wider">Quên mật khẩu?</a>
+                </div>
+                <input type="password" name="password" required class="w-full bg-slate-50 border border-slate-200 focus:border-indigo-500 hover:border-slate-300 rounded-2xl px-5 py-4 text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all font-sans" placeholder="••••••••">
             </div>
-            <button type="submit" class="w-full bg-primary text-white font-bold py-3 rounded-lg hover:bg-indigo-700 transition">Đăng nhập</button>
-            <p class="text-center text-sm text-gray-500">Chưa có tài khoản? <a href="register.php" class="text-primary hover:underline">Đăng ký ngay</a></p>
+
+            <div class="pt-2">
+                <button type="submit" class="w-full btn-gradient text-white text-xs font-bold py-4.5 rounded-2xl shadow-xl uppercase tracking-wider premium-btn">Đăng nhập</button>
+            </div>
+            
+            <p class="text-center text-xs sm:text-sm font-semibold text-slate-400 pt-4 font-sans">
+                Chưa có tài khoản? <a href="register.php" class="text-indigo-600 hover:underline decoration-2 underline-offset-4 font-display font-bold uppercase tracking-wider premium-btn text-xs">Đăng ký ngay</a>
+            </p>
         </form>
     </div>
 </div>

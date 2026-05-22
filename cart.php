@@ -7,7 +7,11 @@ $cartItems = [];
 $total = 0;
 
 if (!empty($cart)) {
-    foreach ($cart as $productId => $quantity) {
+    foreach ($cart as $cartKey => $quantity) {
+        $parts = explode('_', $cartKey);
+        $productId = (int)$parts[0];
+        $size = isset($parts[1]) ? (int)$parts[1] : 40;
+
         $stmt = $pdo->prepare("
             SELECT p.*, pi.image_url 
             FROM products p 
@@ -18,12 +22,14 @@ if (!empty($cart)) {
         $product = $stmt->fetch();
         
         if ($product) {
+            $product['cart_key'] = $cartKey;
+            $product['size'] = $size;
             $product['quantity'] = $quantity;
             $product['subtotal'] = $product['price'] * $quantity;
             $total += $product['subtotal'];
             $cartItems[] = $product;
         } else {
-            unset($_SESSION['cart'][$productId]);
+            unset($_SESSION['cart'][$cartKey]);
         }
     }
 }
@@ -43,23 +49,27 @@ if (!empty($cart)) {
             <div class="w-full lg:w-2/3 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                 <div class="divide-y divide-gray-100">
                     <?php foreach($cartItems as $item): ?>
-                    <div class="p-6 flex items-center gap-6">
+                    <div class="p-6 flex flex-col sm:flex-row items-center sm:items-center gap-6">
                         <div class="w-24 h-24 bg-gray-50 rounded-lg overflow-hidden flex-shrink-0">
                             <img src="<?= !empty($item['image_url']) ? 'public' . $item['image_url'] : 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80' ?>" class="w-full h-full object-cover">
                         </div>
-                        <div class="flex-grow">
+                        <div class="flex-grow w-full text-center sm:text-left">
                             <h3 class="font-bold text-lg"><?= htmlspecialchars($item['name']) ?></h3>
-                            <p class="text-gray-500"><?= format_price($item['price']) ?></p>
-                            <a href="cart_action.php?action=remove&id=<?= $item['id'] ?>" class="text-red-500 text-sm mt-2 inline-block">Xóa</a>
+                            <p class="text-xs font-bold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded w-fit mt-1 mx-auto sm:mx-0">Size: <?= $item['size'] ?></p>
+                            <p class="text-gray-500 mt-1"><?= format_price($item['price']) ?></p>
+                            <a href="cart_action.php?action=remove&id=<?= $item['cart_key'] ?>" class="text-rose-500 font-bold text-sm mt-2 inline-block">Xóa</a>
                         </div>
-                        <div class="w-32">
-                            <form action="cart_action.php?action=update" method="POST">
-                                <input type="hidden" name="product_id" value="<?= $item['id'] ?>">
-                                <input type="number" name="quantity" value="<?= $item['quantity'] ?>" min="1" class="w-16 text-center border rounded py-1" onchange="this.form.submit()">
-                            </form>
-                        </div>
-                        <div class="text-right font-bold text-primary min-w-[100px]">
-                            <?= format_price($item['subtotal']) ?>
+                        <div class="flex items-center justify-between w-full sm:w-auto gap-6 border-t sm:border-none pt-4 sm:pt-0">
+                            <div class="w-32 flex items-center justify-start">
+                                <form action="cart_action.php?action=update" method="POST" class="flex items-center">
+                                    <input type="hidden" name="cart_key" value="<?= $item['cart_key'] ?>">
+                                    <span class="text-xs text-slate-400 mr-2 sm:hidden">SL:</span>
+                                    <input type="number" name="quantity" value="<?= $item['quantity'] ?>" min="1" class="w-16 text-center border rounded-xl py-1.5 font-bold" onchange="this.form.submit()">
+                                </form>
+                            </div>
+                            <div class="text-right font-black text-indigo-600 min-w-[100px] text-lg">
+                                <?= format_price($item['subtotal']) ?>
+                            </div>
                         </div>
                     </div>
                     <?php endforeach; ?>

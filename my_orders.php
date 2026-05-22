@@ -30,7 +30,8 @@ $orders = $stmt->fetchAll();
     </div>
     <?php else: ?>
     <div class="bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden">
-        <table class="w-full text-left">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left min-w-[700px]">
             <thead class="bg-slate-50 border-b border-slate-100">
                 <tr>
                     <th class="px-8 py-5 font-black text-[10px] uppercase tracking-widest text-slate-400">Mã Đơn</th>
@@ -57,12 +58,18 @@ $orders = $stmt->fetchAll();
                         </span>
                     </td>
                     <td class="px-8 py-6 text-right">
-                        <a href="my_order_detail.php?id=<?= $order['id'] ?>" class="text-xs font-black text-dark uppercase tracking-widest border-b-2 border-slate-900 pb-1 hover:text-indigo-600 hover:border-indigo-600 transition-all">Chi tiết</a>
+                        <div class="flex items-center justify-end gap-6">
+                            <?php if ($order['status'] == 'completed' || $order['status'] == 'paid'): ?>
+                                <a href="print_invoice.php?id=<?= $order['id'] ?>" target="_blank" class="text-xs font-black text-indigo-600 uppercase tracking-widest border-b-2 border-indigo-600 pb-1 hover:text-indigo-800 hover:border-indigo-800 transition-all">In hóa đơn</a>
+                            <?php endif; ?>
+                            <a href="my_order_detail.php?id=<?= $order['id'] ?>" class="text-xs font-black text-dark uppercase tracking-widest border-b-2 border-slate-900 pb-1 hover:text-indigo-600 hover:border-indigo-600 transition-all">Chi tiết</a>
+                        </div>
                     </td>
                 </tr>
                 <?php endforeach; ?>
             </tbody>
         </table>
+        </div>
     </div>
     <?php endif; ?>
 </div>

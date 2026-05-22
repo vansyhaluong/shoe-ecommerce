@@ -1,15 +1,39 @@
 <?php
 include 'config.php';
-check_admin();
+
+// Kiểm tra đăng nhập
+if (!isset($_SESSION['user_id'])) {
+    header("Location: login.php");
+    exit();
+}
 
 $order_id = (int)($_GET['id'] ?? 0);
+
+if ($order_id <= 0) {
+    die("Mã đơn hàng không hợp lệ!");
+}
 
 // Lấy thông tin đơn hàng
 $stmt = $pdo->prepare("SELECT * FROM orders WHERE id = ?");
 $stmt->execute([$order_id]);
 $order = $stmt->fetch();
 
-if (!$order) die("Đơn hàng không tồn tại!");
+if (!$order) {
+    die("Đơn hàng không tồn tại!");
+}
+
+// Kiểm tra quyền truy cập (Admin xem tất cả, User chỉ xem đơn hàng của mình đã hoàn thành/thanh toán)
+$role = $_SESSION['user_role'] ?? '';
+$user_id = $_SESSION['user_id'];
+
+if ($role !== 'admin') {
+    if ((int)$order['user_id'] !== (int)$user_id) {
+        die("Bạn không có quyền truy cập hóa đơn của đơn hàng này!");
+    }
+    if ($order['status'] !== 'completed' && $order['status'] !== 'paid') {
+        die("Hóa đơn chỉ có thể in khi đơn hàng đã thanh toán hoặc hoàn thành!");
+    }
+}
 
 // Lấy danh sách sản phẩm
 $stmt = $pdo->prepare("
@@ -92,7 +116,12 @@ $items = $stmt->fetchAll();
             <tbody>
                 <?php foreach($items as $item): ?>
                 <tr>
-                    <td style="font-weight: 600;"><?= htmlspecialchars($item['name']) ?></td>
+                    <td style="font-weight: 600;">
+                        <?= htmlspecialchars($item['name']) ?>
+                        <?php if(!empty($item['size'])): ?>
+                            <span style="font-size: 11px; color: #6366f1; background: #e0e7ff; padding: 2px 6px; border-radius: 4px; margin-left: 8px; font-weight: bold;">Size: <?= $item['size'] ?></span>
+                        <?php endif; ?>
+                    </td>
                     <td style="text-align: center;"><?= $item['quantity'] ?></td>
                     <td style="text-align: right;"><?= format_price($item['price']) ?></td>
                     <td style="text-align: right; font-weight: 700;"><?= format_price($item['price'] * $item['quantity']) ?></td>

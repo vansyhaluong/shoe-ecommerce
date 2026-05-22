@@ -9,13 +9,20 @@ $orders = $stmt->fetchAll();
 ?>
 
 <div class="container mx-auto px-4 py-12">
-    <div class="mb-12 text-center md:text-left">
-        <h1 class="text-4xl font-black text-dark mb-2 tracking-tight">Quản Lý <span class="text-indigo-600">Đơn Hàng</span></h1>
-        <p class="text-slate-500 font-medium italic">Theo dõi và cập nhật trạng thái đơn hàng của khách hàng.</p>
+    <div class="mb-12 flex flex-col md:flex-row justify-between items-center gap-6 text-center md:text-left">
+        <div>
+            <h1 class="text-4xl font-black text-dark mb-2 tracking-tight">Quản Lý <span class="text-indigo-600">Đơn Hàng</span></h1>
+            <p class="text-slate-500 font-medium italic">Theo dõi và cập nhật trạng thái đơn hàng của khách hàng.</p>
+        </div>
+        <a href="export_orders_excel.php" class="bg-emerald-600 hover:bg-emerald-700 text-white font-black px-6 py-4 rounded-2xl flex items-center gap-2 text-xs uppercase tracking-widest transition-all shadow-lg shadow-emerald-600/20">
+            <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+            Xuất Excel
+        </a>
     </div>
 
     <div class="bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden">
-        <table class="w-full text-left">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left min-w-[800px]">
             <thead class="bg-slate-50 border-b border-slate-100">
                 <tr>
                     <th class="px-8 py-5 font-black text-xs uppercase tracking-widest text-slate-400">Mã ĐH</th>
@@ -56,6 +63,7 @@ $orders = $stmt->fetchAll();
                 <?php endforeach; ?>
             </tbody>
         </table>
+        </div>
     </div>
 </div>
 

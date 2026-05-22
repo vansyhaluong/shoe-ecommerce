@@ -11,7 +11,8 @@ if (isset($_GET['lang'])) {
 $current_lang = $_SESSION['lang'] ?? 'vi';
 
 // Hàm dịch thuật
-function __($key) {
+function __($key)
+{
     global $languages, $current_lang;
     return $languages[$current_lang][$key] ?? $key;
 }
@@ -32,19 +33,21 @@ try {
 }
 
 // Các hàm tiện ích dùng chung
-function format_price($price) {
+function format_price($price)
+{
     return number_format($price, 0, ',', '.') . 'đ';
 }
 
-function redirect($url) {
+function redirect($url)
+{
     header("Location: " . $url);
     exit();
 }
 
-function check_admin() {
+function check_admin()
+{
     if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'admin') {
         header("Location: login.php");
         exit();
     }
 }
-?>
