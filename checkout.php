@@ -13,17 +13,28 @@ if (!isset($_SESSION['cart']) || empty($_SESSION['cart'])) {
 
 $total = 0;
 $cartItems = [];
-foreach ($_SESSION['cart'] as $id => $qty) {
+foreach ($_SESSION['cart'] as $cartKey => $qty) {
+    $parts = explode('_', $cartKey);
+    $productId = (int)$parts[0];
+    $size = isset($parts[1]) ? (int)$parts[1] : 40;
+
     $stmt = $pdo->prepare("SELECT * FROM products WHERE id = ?");
-    $stmt->execute([$id]);
+    $stmt->execute([$productId]);
     $p = $stmt->fetch();
     if ($p) {
+        $p['size'] = $size;
         $p['quantity'] = $qty;
         $p['subtotal'] = $p['price'] * $qty;
         $total += $p['subtotal'];
         $cartItems[] = $p;
     }
 }
+$errors = get_validation_errors();
+$old = get_old_input();
+
+$shipping_name = $old['shipping_name'] ?? ($_SESSION['user_name'] ?? '');
+$shipping_phone = $old['shipping_phone'] ?? '';
+$shipping_address = $old['shipping_address'] ?? '';
 ?>
 
 <div class="container mx-auto px-4 py-12">
@@ -31,23 +42,35 @@ foreach ($_SESSION['cart'] as $id => $qty) {
         <!-- Form thông tin -->
         <div class="w-full lg:w-2/3">
             <h2 class="text-xl md:text-2xl font-extrabold uppercase tracking-tight text-dark mb-8 font-display">Thông tin giao hàng</h2>
+
+            <?php if(!empty($errors)): ?>
+                <div class="bg-rose-50 border border-rose-100 text-rose-600 px-5 py-4 rounded-2xl mb-6 text-xs font-bold font-sans space-y-1">
+                    <?php foreach($errors as $err): ?>
+                        <p>• <?= htmlspecialchars($err) ?></p>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
+
             <form action="checkout_action.php" method="POST" class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 space-y-6">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                         <label class="block premium-label mb-2">Họ và tên</label>
-                        <input type="text" name="shipping_name" required class="w-full bg-slate-50 border border-slate-200 focus:border-indigo-500 hover:border-slate-300 rounded-2xl px-5 py-4 text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all font-sans" value="<?= $_SESSION['user_name'] ?? '' ?>">
+                        <input type="text" name="shipping_name" required class="w-full bg-slate-50 border border-slate-200 focus:border-indigo-500 hover:border-slate-300 rounded-2xl px-5 py-4 text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all font-sans" value="<?= htmlspecialchars($shipping_name) ?>">
                     </div>
                     <div>
                         <label class="block premium-label mb-2">Số điện thoại</label>
-                        <input type="text" name="shipping_phone" required class="w-full bg-slate-50 border border-slate-200 focus:border-indigo-500 hover:border-slate-300 rounded-2xl px-5 py-4 text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all font-sans">
+                        <input type="text" name="shipping_phone" value="<?= htmlspecialchars($shipping_phone) ?>" required class="w-full bg-slate-50 border border-slate-200 focus:border-indigo-500 hover:border-slate-300 rounded-2xl px-5 py-4 text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all font-sans">
                     </div>
                 </div>
                 <div>
                     <label class="block premium-label mb-2">Địa chỉ nhận hàng</label>
-                    <textarea name="shipping_address" rows="3" required class="w-full bg-slate-50 border border-slate-200 focus:border-indigo-500 hover:border-slate-300 rounded-2xl px-5 py-4 text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all font-sans" placeholder="Số nhà, tên đường, phường/xã..."></textarea>
+                    <textarea name="shipping_address" rows="3" required class="w-full bg-slate-50 border border-slate-200 focus:border-indigo-500 hover:border-slate-300 rounded-2xl px-5 py-4 text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all font-sans" placeholder="Số nhà, tên đường, phường/xã..."><?= htmlspecialchars($shipping_address) ?></textarea>
                 </div>
                 <div class="pt-4">
-                    <button type="submit" class="w-full btn-gradient text-white text-xs font-bold py-4.5 rounded-2xl shadow-xl uppercase tracking-wider premium-btn">Xác nhận đặt hàng</button>
+                    <button type="submit"
+class="w-full btn-gradient text-white text-sm font-semibold py-5 rounded-2xl shadow-xl uppercase tracking-[0.18em] premium-btn min-h-[58px]">
+    Xác nhận đặt hàng
+</button>
                 </div>
             </form>
         </div>
@@ -59,7 +82,7 @@ foreach ($_SESSION['cart'] as $id => $qty) {
                 <div class="space-y-4 mb-6">
                     <?php foreach($cartItems as $item): ?>
                     <div class="flex justify-between text-sm items-start gap-4">
-                        <span class="text-slate-600 font-sans leading-snug"><?= htmlspecialchars($item['name']) ?> <span class="text-xs text-slate-400 font-bold ml-1 font-sans">x<?= $item['quantity'] ?></span></span>
+                        <span class="text-slate-600 font-sans leading-snug"><?= htmlspecialchars($item['name']) ?> <span class="text-xs text-slate-400 font-bold font-sans">(Size: <?= $item['size'] ?>)</span> <span class="text-xs text-slate-400 font-bold ml-1 font-sans">x<?= $item['quantity'] ?></span></span>
                         <span class="font-bold text-slate-900 font-sans flex-shrink-0"><?= format_price($item['subtotal']) ?></span>
                     </div>
                     <?php endforeach; ?>

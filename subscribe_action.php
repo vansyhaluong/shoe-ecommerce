@@ -2,9 +2,9 @@
 include 'config.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $email = $_POST['email'] ?? '';
+    $email = sanitize_text(trim($_POST['email'] ?? ''));
 
-    if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
+    if (validate_email($email)) {
         try {
             // Tự động tạo bảng nếu chưa có
             $pdo->exec("CREATE TABLE IF NOT EXISTS subscribers (id INT AUTO_INCREMENT PRIMARY KEY, email VARCHAR(100) UNIQUE NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)");
@@ -17,7 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (strpos($e->getMessage(), 'Duplicate entry') !== false) {
                 echo "<script>alert('Email này đã được đăng ký trước đó!'); window.location.href='index.php';</script>";
             } else {
-                echo "<script>alert('Có lỗi xảy ra: " . $e->getMessage() . "'); window.location.href='index.php';</script>";
+                echo "<script>alert('Có lỗi xảy ra, vui lòng thử lại sau!'); window.location.href='index.php';</script>";
             }
         }
     } else {

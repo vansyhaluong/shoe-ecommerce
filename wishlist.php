@@ -105,14 +105,87 @@ $wishlistItems = $stmt->fetchAll();
 </div>
 
 <script>
-// Specialized quick remove specifically for the trash icon in wishlist page
+// Specialized secure remove for the trash icon in wishlist page
 function removeWishlistItem(productId) {
     const card = document.getElementById(`wishlist-card-${productId}`);
-    if (card) {
-        // Toggle the wishlist via the global helper
-        const btn = card.querySelector('button');
-        toggleWishlist(productId, btn);
-    }
+    if (!card) return;
+    
+    // Add visual feedback indicating removal in progress
+    card.classList.add('scale-95', 'opacity-70');
+    
+    const formData = new FormData();
+    formData.append('ajax', '1');
+    formData.append('product_id', productId);
+    
+    fetch('wishlist_action.php?action=remove', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'unauthorized') {
+            showToast(data.message, 'error');
+            setTimeout(() => {
+                window.location.href = 'login.php';
+            }, 1200);
+        } else if (data.status === 'success') {
+            // Update navigation badge count
+            const badge = document.getElementById('wishlist-badge');
+            if (badge) {
+                badge.innerText = data.count;
+                if (data.count > 0) {
+                    badge.classList.remove('scale-0', 'opacity-0');
+                    badge.classList.add('scale-100', 'opacity-100');
+                } else {
+                    badge.classList.remove('scale-100', 'opacity-100');
+                    badge.classList.add('scale-0', 'opacity-0');
+                }
+                
+                badge.classList.add('scale-125');
+                setTimeout(() => badge.classList.remove('scale-125'), 300);
+            }
+            
+            // Update items count text
+            const textCount = document.getElementById('wishlist-count-text');
+            if (textCount) {
+                textCount.innerText = data.count;
+            }
+
+            // De-activate all heart icons matching this product ID on the page
+            const heartIcons = document.querySelectorAll(`.heart-icon-svg-${productId}`);
+            heartIcons.forEach(svg => {
+                svg.setAttribute('fill', 'none');
+                svg.classList.remove('text-rose-500');
+                svg.classList.add('text-slate-400');
+            });
+
+            showToast(data.message, 'success');
+
+            // Smoothly remove card from UI
+            card.classList.remove('scale-95', 'opacity-70');
+            card.classList.add('opacity-0', 'scale-90');
+            setTimeout(() => {
+                card.remove();
+                
+                // If wishlist is completely empty, refresh the page to render the premium empty state
+                const grid = document.getElementById('wishlist-grid');
+                if (grid && grid.children.length === 0) {
+                    location.reload();
+                }
+            }, 400);
+        } else {
+            card.classList.remove('scale-95', 'opacity-70');
+            showToast(data.message || 'Đã có lỗi xảy ra!', 'error');
+        }
+    })
+    .catch(err => {
+        card.classList.remove('scale-95', 'opacity-70');
+        console.error('Lỗi khi xóa khỏi danh sách yêu thích:', err);
+        showToast('Không thể kết nối đến máy chủ.', 'error');
+    });
 }
 </script>
 <?php include 'footer.php'; ?>

@@ -20,15 +20,68 @@ function handle_image_upload($file) {
 }
 
 if ($action === 'add') {
+    $name = sanitize_text($_POST['name'] ?? '');
+    $brand_id = (int)($_POST['brand_id'] ?? 0);
+    $category_id = (int)($_POST['category_id'] ?? 0);
+    $price = $_POST['price'] ?? '';
+    $description = sanitize_text($_POST['description'] ?? '');
+
+    $errors = [];
+    if (!validate_string_len($name, 3, 255)) {
+        $errors[] = 'Tên sản phẩm phải từ 3 đến 255 ký tự!';
+    }
+    if (!db_record_exists('brands', 'id', $brand_id)) {
+        $errors[] = 'Thương hiệu không hợp lệ hoặc không tồn tại!';
+    }
+    if (!db_record_exists('categories', 'id', $category_id)) {
+        $errors[] = 'Danh mục không hợp lệ hoặc không tồn tại!';
+    }
+    if (!validate_price($price)) {
+        $errors[] = 'Giá sản phẩm phải là số dương hợp lệ (từ 1đ đến 100.000.000đ)!';
+    }
+
+    // Image validations
+    if (!empty($_FILES['image']['name'])) {
+        $img_check = validate_image_file($_FILES['image']);
+        if (!$img_check['valid']) {
+            $errors[] = 'Hình ảnh chính: ' . $img_check['error'];
+        }
+    }
+
+    // Gallery images validations
+    if (isset($_FILES['gallery'])) {
+        for ($i = 0; $i < count($_FILES['gallery']['name']); $i++) {
+            if ($_FILES['gallery']['error'][$i] === UPLOAD_ERR_OK) {
+                $file = [
+                    'name' => $_FILES['gallery']['name'][$i],
+                    'type' => $_FILES['gallery']['type'][$i],
+                    'tmp_name' => $_FILES['gallery']['tmp_name'][$i],
+                    'error' => $_FILES['gallery']['error'][$i],
+                    'size' => $_FILES['gallery']['size'][$i]
+                ];
+                $img_check = validate_image_file($file);
+                if (!$img_check['valid']) {
+                    $errors[] = "Hình ảnh phụ " . ($i + 1) . ": " . $img_check['error'];
+                }
+            }
+        }
+    }
+
+    if (!empty($errors)) {
+        $_SESSION['validation_errors'] = $errors;
+        $_SESSION['old_input'] = $_POST;
+        redirect('admin_product_form.php');
+    }
+
     $pdo->beginTransaction();
     try {
         $stmt = $pdo->prepare("INSERT INTO products (name, brand_id, category_id, price, description) VALUES (?, ?, ?, ?, ?)");
         $stmt->execute([
-            $_POST['name'],
-            $_POST['brand_id'],
-            $_POST['category_id'],
-            $_POST['price'],
-            $_POST['description']
+            $name,
+            $brand_id,
+            $category_id,
+            $price,
+            $description
         ]);
         $product_id = $pdo->lastInsertId();
 
@@ -64,22 +117,81 @@ if ($action === 'add') {
         $pdo->commit();
     } catch (Exception $e) {
         $pdo->rollBack();
-        die("Lỗi: " . $e->getMessage());
+        $_SESSION['validation_errors'] = ['Lỗi hệ thống khi lưu sản phẩm. Vui lòng thử lại sau!'];
+        $_SESSION['old_input'] = $_POST;
+        redirect('admin_product_form.php');
     }
     redirect('admin_products.php');
 }
 
 if ($action === 'edit') {
-    $id = (int)$_POST['id'];
+    $id = (int)($_POST['id'] ?? 0);
+    if ($id <= 0 || !db_record_exists('products', 'id', $id)) {
+        die('Sản phẩm không tồn tại!');
+    }
+
+    $name = sanitize_text($_POST['name'] ?? '');
+    $brand_id = (int)($_POST['brand_id'] ?? 0);
+    $category_id = (int)($_POST['category_id'] ?? 0);
+    $price = $_POST['price'] ?? '';
+    $description = sanitize_text($_POST['description'] ?? '');
+
+    $errors = [];
+    if (!validate_string_len($name, 3, 255)) {
+        $errors[] = 'Tên sản phẩm phải từ 3 đến 255 ký tự!';
+    }
+    if (!db_record_exists('brands', 'id', $brand_id)) {
+        $errors[] = 'Thương hiệu không hợp lệ hoặc không tồn tại!';
+    }
+    if (!db_record_exists('categories', 'id', $category_id)) {
+        $errors[] = 'Danh mục không hợp lệ hoặc không tồn tại!';
+    }
+    if (!validate_price($price)) {
+        $errors[] = 'Giá sản phẩm phải là số dương hợp lệ (từ 1đ đến 100.000.000đ)!';
+    }
+
+    // Image validations
+    if (!empty($_FILES['image']['name'])) {
+        $img_check = validate_image_file($_FILES['image']);
+        if (!$img_check['valid']) {
+            $errors[] = 'Hình ảnh chính: ' . $img_check['error'];
+        }
+    }
+
+    // Gallery images validations
+    if (isset($_FILES['gallery'])) {
+        for ($i = 0; $i < count($_FILES['gallery']['name']); $i++) {
+            if ($_FILES['gallery']['error'][$i] === UPLOAD_ERR_OK) {
+                $file = [
+                    'name' => $_FILES['gallery']['name'][$i],
+                    'type' => $_FILES['gallery']['type'][$i],
+                    'tmp_name' => $_FILES['gallery']['tmp_name'][$i],
+                    'error' => $_FILES['gallery']['error'][$i],
+                    'size' => $_FILES['gallery']['size'][$i]
+                ];
+                $img_check = validate_image_file($file);
+                if (!$img_check['valid']) {
+                    $errors[] = "Hình ảnh phụ " . ($i + 1) . ": " . $img_check['error'];
+                }
+            }
+        }
+    }
+
+    if (!empty($errors)) {
+        $_SESSION['validation_errors'] = $errors;
+        $_SESSION['old_input'] = $_POST;
+        redirect('admin_product_form.php?id=' . $id);
+    }
+
     $pdo->beginTransaction();
     try {
         $stmt = $pdo->prepare("UPDATE products SET name = ?, brand_id = ?, category_id = ?, price = ?, description = ? WHERE id = ?");
         $stmt->execute([
-            $_POST['name'],
-            $_POST['brand_id'],
-            $_POST['category_id'],
-            $_POST['price'],
-            $_POST['description'],
+            $name,
+            $brand_id,
+            $category_id,
+            $price,
+            $description,
             $id
         ]);
 
@@ -140,13 +252,18 @@ if ($action === 'edit') {
         $pdo->commit();
     } catch (Exception $e) {
         $pdo->rollBack();
-        die("Lỗi: " . $e->getMessage());
+        $_SESSION['validation_errors'] = ['Lỗi hệ thống khi cập nhật sản phẩm. Vui lòng thử lại sau!'];
+        $_SESSION['old_input'] = $_POST;
+        redirect('admin_product_form.php?id=' . $id);
     }
     redirect('admin_products.php');
 }
 
 if ($action === 'delete') {
-    $id = (int)$_GET['id'];
+    $id = (int)($_GET['id'] ?? 0);
+    if ($id <= 0 || !db_record_exists('products', 'id', $id)) {
+        die('Sản phẩm không tồn tại!');
+    }
     
     // Lấy danh sách ảnh để xóa file
     $stmt = $pdo->prepare("SELECT image_url FROM product_images WHERE product_id = ?");

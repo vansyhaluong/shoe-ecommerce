@@ -7,8 +7,8 @@ include 'header.php';
 $id = (int)($_GET['id'] ?? 0);
 $product = [
     'name' => '',
-    'brand' => '',
-    'category' => '',
+    'brand_id' => '',
+    'category_id' => '',
     'price' => '',
     'description' => ''
 ];
@@ -17,6 +17,10 @@ if ($id > 0) {
     $stmt = $pdo->prepare("SELECT * FROM products WHERE id = ?");
     $stmt->execute([$id]);
     $product = $stmt->fetch();
+
+    if (!$product) {
+        redirect('admin_products.php');
+    }
 
     // Lấy ảnh chính
     $stmt = $pdo->prepare("SELECT image_url FROM product_images WHERE product_id = ? AND is_primary = 1");
@@ -30,6 +34,18 @@ if ($id > 0) {
     $product['gallery'] = $stmt->fetchAll();
 }
 
+// Get validation errors and old input
+$errors = get_validation_errors();
+$old = get_old_input();
+
+if (!empty($old)) {
+    $product['name'] = $old['name'] ?? $product['name'];
+    $product['brand_id'] = $old['brand_id'] ?? ($product['brand_id'] ?? '');
+    $product['category_id'] = $old['category_id'] ?? ($product['category_id'] ?? '');
+    $product['price'] = $old['price'] ?? $product['price'];
+    $product['description'] = $old['description'] ?? $product['description'];
+}
+
 // Lấy danh sách thương hiệu và danh mục
 $brands = $pdo->query("SELECT * FROM brands ORDER BY name")->fetchAll();
 $categories = $pdo->query("SELECT * FROM categories ORDER BY name")->fetchAll();
@@ -39,6 +55,14 @@ $categories = $pdo->query("SELECT * FROM categories ORDER BY name")->fetchAll();
     <div class="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-sm border">
         <h1 class="text-3xl font-bold mb-8"><?= $id > 0 ? 'Chỉnh sửa' : 'Thêm' ?> sản phẩm</h1>
         
+        <?php if(!empty($errors)): ?>
+            <div class="bg-rose-50 border border-rose-100 text-rose-600 px-5 py-4 rounded-2xl mb-6 text-xs font-bold font-sans space-y-1">
+                <?php foreach($errors as $err): ?>
+                    <p>• <?= htmlspecialchars($err) ?></p>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
+
         <form action="admin_product_action.php?action=<?= $id > 0 ? 'edit' : 'add' ?>" method="POST" enctype="multipart/form-data" class="space-y-6">
             <?php if($id > 0): ?>
                 <input type="hidden" name="id" value="<?= $id ?>">

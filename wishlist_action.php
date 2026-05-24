@@ -37,9 +37,9 @@ function get_wishlist_count($pdo, $user_id) {
 if ($action === 'toggle') {
     $product_id = (int)($_POST['product_id'] ?? 0);
     
-    if ($product_id <= 0) {
+    if ($product_id <= 0 || !db_record_exists('products', 'id', $product_id)) {
         if ($is_ajax) {
-            echo json_encode(['status' => 'error', 'message' => 'Sản phẩm không hợp lệ.']);
+            echo json_encode(['status' => 'error', 'message' => 'Sản phẩm không hợp lệ hoặc không tồn tại.']);
             exit();
         }
         redirect('index.php');
@@ -85,10 +85,29 @@ if ($action === 'toggle') {
 if ($action === 'remove') {
     $product_id = (int)($_GET['product_id'] ?? $_POST['product_id'] ?? 0);
     
-    if ($product_id > 0) {
-        $del = $pdo->prepare("DELETE FROM wishlist WHERE user_id = ? AND product_id = ?");
-        $del->execute([$user_id, $product_id]);
+    if ($product_id <= 0 || !db_record_exists('products', 'id', $product_id)) {
+        if ($is_ajax) {
+            echo json_encode(['status' => 'error', 'message' => 'Sản phẩm không hợp lệ hoặc không tồn tại.']);
+            exit();
+        }
+        redirect('wishlist.php');
     }
+    
+    // Kiểm tra xem sản phẩm có thực sự nằm trong danh sách yêu thích của người dùng hiện tại không
+    $stmt = $pdo->prepare("SELECT id FROM wishlist WHERE user_id = ? AND product_id = ?");
+    $stmt->execute([$user_id, $product_id]);
+    $existing = $stmt->fetch();
+    
+    if (!$existing) {
+        if ($is_ajax) {
+            echo json_encode(['status' => 'error', 'message' => 'Sản phẩm không nằm trong danh sách yêu thích của bạn hoặc bạn không có quyền xóa!']);
+            exit();
+        }
+        redirect('wishlist.php');
+    }
+    
+    $del = $pdo->prepare("DELETE FROM wishlist WHERE user_id = ? AND product_id = ?");
+    $del->execute([$user_id, $product_id]);
     
     $count = get_wishlist_count($pdo, $user_id);
     
@@ -97,7 +116,7 @@ if ($action === 'remove') {
             'status' => 'success',
             'action' => 'removed',
             'count' => $count,
-            'message' => 'Đã xóa khỏi danh sách yêu thích!'
+            'message' => 'Đã xóa sản phẩm khỏi danh sách yêu thích!'
         ]);
         exit();
     }

@@ -5,15 +5,31 @@ $id = (int)($_GET['id'] ?? 0);
 
 // Xử lý gửi đánh giá
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_review'])) {
-    $reviewer_name = trim($_POST['reviewer_name'] ?? '');
+    $reviewer_name = sanitize_text(trim($_POST['reviewer_name'] ?? ''));
     if (empty($reviewer_name)) {
         $reviewer_name = $_SESSION['user_name'] ?? 'Khách hàng';
     }
     $rating = (int)($_POST['rating'] ?? 5);
-    $rating = max(1, min(5, $rating));
-    $comment = trim($_POST['comment'] ?? '');
+    $comment = sanitize_text(trim($_POST['comment'] ?? ''));
 
-    if ($id > 0 && !empty($comment)) {
+    $errors = [];
+    if ($id <= 0 || !db_record_exists('products', 'id', $id)) {
+        die("Sản phẩm không tồn tại!");
+    }
+    if (!validate_string_len($reviewer_name, 2, 50)) {
+        $errors[] = 'Tên người đánh giá phải từ 2 đến 50 ký tự!';
+    }
+    if ($rating < 1 || $rating > 5) {
+        $errors[] = 'Điểm đánh giá phải từ 1 đến 5 sao!';
+    }
+    if (!validate_string_len($comment, 3, 1000)) {
+        $errors[] = 'Nội dung đánh giá phải từ 3 đến 1000 ký tự!';
+    }
+
+    if (!empty($errors)) {
+        $_SESSION['review_errors'] = $errors;
+        $_SESSION['old_review'] = $_POST;
+    } else {
         $ins = $pdo->prepare("INSERT INTO product_reviews (product_id, reviewer_name, rating, comment) VALUES (?, ?, ?, ?)");
         $ins->execute([$id, $reviewer_name, $rating, $comment]);
     }
@@ -92,6 +108,10 @@ if (isset($_SESSION['user_id'])) {
     $stmt_wl_ids->execute([$_SESSION['user_id']]);
     $userWishlist = $stmt_wl_ids->fetchAll(PDO::FETCH_COLUMN);
 }
+
+$review_errors = $_SESSION['review_errors'] ?? [];
+$old_review = $_SESSION['old_review'] ?? [];
+unset($_SESSION['review_errors'], $_SESSION['old_review']);
 ?>
 
 <!-- Breadcrumbs -->
@@ -292,6 +312,21 @@ if (isset($_SESSION['user_id'])) {
             <!-- Write Review Form (Full Width at the bottom) -->
             <div class="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm max-w-3xl mx-auto">
                 <h4 class="font-black text-dark text-xl mb-6 italic uppercase tracking-tight text-center">Đánh giá sản phẩm này</h4>
+                
+                <?php if(!empty($review_errors)): ?>
+                    <div class="bg-rose-50 border border-rose-100 text-rose-600 px-5 py-4 rounded-2xl mb-6 text-xs font-bold font-sans space-y-1">
+                        <?php foreach($review_errors as $err): ?>
+                            <p>• <?= htmlspecialchars($err) ?></p>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+
+                <?php
+                $reviewerNameValue = $old_review['reviewer_name'] ?? ($_SESSION['user_name'] ?? '');
+                $commentValue = $old_review['comment'] ?? '';
+                $ratingValue = isset($old_review['rating']) ? (int)$old_review['rating'] : 5;
+                ?>
+
                 <form method="POST" class="space-y-6">
                     <input type="hidden" name="submit_review" value="1">
                     
@@ -302,7 +337,7 @@ if (isset($_SESSION['user_id'])) {
                             <div class="flex gap-2" id="star-selector">
                                 <?php for($i=1; $i<=5; $i++): ?>
                                 <label class="cursor-pointer">
-                                    <input type="radio" name="rating" value="<?= $i ?>" <?= $i === 5 ? 'checked' : '' ?> class="sr-only peer">
+                                    <input type="radio" name="rating" value="<?= $i ?>" <?= $i === $ratingValue ? 'checked' : '' ?> class="sr-only peer">
                                     <svg class="w-10 h-10 text-slate-300 peer-checked:text-amber-400 hover:text-amber-400 transition-colors fill-current star-icon" data-value="<?= $i ?>" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
                                 </label>
                                 <?php endfor; ?>
@@ -311,13 +346,13 @@ if (isset($_SESSION['user_id'])) {
                         
                         <div>
                             <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Tên hiển thị</label>
-                            <input type="text" name="reviewer_name" value="<?= htmlspecialchars($_SESSION['user_name'] ?? '') ?>" placeholder="Nhập tên của bạn..." class="w-full bg-slate-50 border-none rounded-2xl px-5 py-4 text-sm focus:ring-2 focus:ring-indigo-500 font-medium">
+                            <input type="text" name="reviewer_name" value="<?= htmlspecialchars($reviewerNameValue) ?>" placeholder="Nhập tên của bạn..." class="w-full bg-slate-50 border-none rounded-2xl px-5 py-4 text-sm focus:ring-2 focus:ring-indigo-500 font-medium">
                         </div>
                     </div>
                     
                     <div>
                         <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Bình luận của bạn</label>
-                        <textarea name="comment" required rows="4" placeholder="Chia sẻ cảm nhận của bạn về sản phẩm..." class="w-full bg-slate-50 border-none rounded-2xl px-5 py-4 text-sm focus:ring-2 focus:ring-indigo-500 font-medium"></textarea>
+                        <textarea name="comment" required rows="4" placeholder="Chia sẻ cảm nhận của bạn về sản phẩm..." class="w-full bg-slate-50 border-none rounded-2xl px-5 py-4 text-sm focus:ring-2 focus:ring-indigo-500 font-medium"><?= htmlspecialchars($commentValue) ?></textarea>
                     </div>
                     
                     <div class="text-center">

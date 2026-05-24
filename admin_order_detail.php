@@ -26,9 +26,12 @@ $items = $stmt->fetchAll();
 
 // Xử lý cập nhật trạng thái
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $new_status = $_POST['status'];
-    $stmt = $pdo->prepare("UPDATE orders SET status = ? WHERE id = ?");
-    $stmt->execute([$new_status, $order_id]);
+    $new_status = $_POST['status'] ?? '';
+    $allowed_statuses = ['pending', 'processing', 'shipped', 'completed', 'cancelled'];
+    if (in_array($new_status, $allowed_statuses, true)) {
+        $stmt = $pdo->prepare("UPDATE orders SET status = ? WHERE id = ?");
+        $stmt->execute([$new_status, $order_id]);
+    }
     redirect('admin_order_detail.php?id=' . $order_id);
 }
 ?>

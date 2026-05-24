@@ -21,13 +21,13 @@ if(!$order) {
 $error = '';
 $success = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'request_return') {
-    $reason = trim($_POST['reason'] ?? '');
+    $reason = sanitize_text(trim($_POST['reason'] ?? ''));
     
     // Bảo mật: Chỉ cho phép đơn hàng có status completed hoặc paid
     if ($order['status'] !== 'completed' && $order['status'] !== 'paid') {
         $error = 'Đơn hàng chưa hoàn thành hoặc chưa thanh toán, không thể yêu cầu đổi trả!';
-    } elseif (empty($reason)) {
-        $error = 'Vui lòng nhập lý do đổi trả hàng!';
+    } elseif (!validate_string_len($reason, 5, 500)) {
+        $error = 'Lý do đổi trả phải từ 5 đến 500 ký tự!';
     } else {
         try {
             $stmt_ins = $pdo->prepare("INSERT INTO return_requests (order_id, user_id, reason, status) VALUES (?, ?, ?, 'pending')");

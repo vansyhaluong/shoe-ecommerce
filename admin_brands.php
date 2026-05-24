@@ -4,28 +4,61 @@ check_admin();
 $title = 'Quản lý Thương hiệu - Admin';
 include 'header.php'; 
 
+$error = '';
+
 // Xử lý thêm
 if (isset($_POST['add_brand'])) {
-    $name = $_POST['name'];
-    $stmt = $pdo->prepare("INSERT IGNORE INTO brands (name) VALUES (?)");
-    $stmt->execute([$name]);
-    header("Location: admin_brands.php");
-    exit();
+    $name = sanitize_text($_POST['name'] ?? '');
+    if (!validate_string_len($name, 2, 100)) {
+        $error = 'Tên thương hiệu phải từ 2 đến 100 ký tự!';
+    } elseif (db_record_exists('brands', 'name', $name)) {
+        $error = 'Thương hiệu này đã tồn tại!';
+    } else {
+        try {
+            $stmt = $pdo->prepare("INSERT INTO brands (name) VALUES (?)");
+            $stmt->execute([$name]);
+            header("Location: admin_brands.php");
+            exit();
+        } catch (PDOException $e) {
+            $error = 'Có lỗi xảy ra khi thêm thương hiệu!';
+        }
+    }
 }
 
 // Xử lý xóa
 if (isset($_GET['delete'])) {
     $id = (int)$_GET['delete'];
-    $stmt = $pdo->prepare("DELETE FROM brands WHERE id = ?");
-    $stmt->execute([$id]);
-    header("Location: admin_brands.php");
-    exit();
+    if ($id <= 0 || !db_record_exists('brands', 'id', $id)) {
+        $error = 'Thương hiệu không tồn tại!';
+    } else {
+        // Kiểm tra xem có sản phẩm thuộc thương hiệu không
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM products WHERE brand_id = ?");
+        $stmt->execute([$id]);
+        if ((int)$stmt->fetchColumn() > 0) {
+            $error = 'Không thể xóa thương hiệu này vì đang có sản phẩm trực thuộc!';
+        } else {
+            try {
+                $stmt = $pdo->prepare("DELETE FROM brands WHERE id = ?");
+                $stmt->execute([$id]);
+                header("Location: admin_brands.php");
+                exit();
+            } catch (PDOException $e) {
+                $error = 'Có lỗi xảy ra khi xóa thương hiệu!';
+            }
+        }
+    }
 }
 
 $brands = $pdo->query("SELECT * FROM brands ORDER BY id DESC")->fetchAll();
 ?>
 
 <div class="container mx-auto px-4 py-12">
+    <?php if(!empty($error)): ?>
+        <div class="bg-rose-50 border border-rose-100 text-rose-600 px-5 py-4 rounded-2xl mb-6 text-xs font-bold font-sans">
+            <?= htmlspecialchars($error) ?>
+        </div>
+    <?php endif; ?>
+
     <div class="flex justify-between items-center mb-8">
         <h1 class="text-3xl font-bold">Quản lý Thương hiệu</h1>
         <a href="admin_dashboard.php" class="text-indigo-600 hover:underline">Quay lại Dashboard</a>

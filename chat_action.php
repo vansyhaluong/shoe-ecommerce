@@ -6,8 +6,8 @@ $session_id = session_id();
 $user_id = $_SESSION['user_id'] ?? null;
 
 if ($action === 'send') {
-    $message = $_POST['message'] ?? '';
-    if (!empty($message)) {
+    $message = sanitize_text(trim($_POST['message'] ?? ''));
+    if (!empty($message) && validate_string_len($message, 1, 1000)) {
         // 1. Lưu tin nhắn của khách
         $stmt = $pdo->prepare("INSERT INTO messages (user_id, session_id, message, is_from_admin) VALUES (?, ?, ?, 0)");
         $stmt->execute([$user_id, $session_id, $message]);

@@ -9,7 +9,14 @@ $response = '';
 
 if (!empty($message)) {
     // 1. Làm sạch và chuẩn hóa tin nhắn
-    $message = htmlspecialchars(trim($message));
+    $message = sanitize_text(trim($message));
+    if (!validate_string_len($message, 1, 1000)) {
+        echo json_encode([
+            'status' => 'error',
+            'message' => 'Tin nhắn phải từ 1 đến 1000 ký tự!'
+        ]);
+        exit();
+    }
     $msg_lower = mb_strtolower($message, 'UTF-8');
 
     // 2. Định nghĩa các nhóm từ khóa và danh sách câu trả lời ngẫu nhiên (variations)

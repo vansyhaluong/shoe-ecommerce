@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ShoeStore ERD Renderer</title>
+  <!-- Load modern clean typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Load Mermaid.js from CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  
+  <style>
+    body {
+      margin: 0;
+      padding: 40px;
+      background-color: #ffffff;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      box-sizing: border-box;
+    }
+    .mermaid svg {
+    width: 100% !important;
+    height: auto !important;
+}
+
+.mermaid text {
+    font-size: 18px !important;
+    font-family: Arial, sans-serif !important;
+}
+    .container {
+      width: 100%;
+      max-width: 1800px;
+      background: #ffffff;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
+      border: 1px solid #eef0f2;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+      width: 100%;
+      border-bottom: 2px solid #111111;
+      padding-bottom: 15px;
+    }
+    .header h1 {
+      font-size: 26px;
+      font-weight: 700;
+      color: #111111;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin: 0 0 8px 0;
+    }
+    .header p {
+      font-size: 14px;
+      color: #555555;
+      margin: 0;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    #erd-diagram {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #ffffff;
+    }
+    /* Custom CSS to inject into Mermaid SVG to ensure absolute black/white crispness */
+    .mermaid svg {
+      max-width: 100% !important;
+      height: auto !important;
+    }
+    .mermaid .entityBox {
+      fill: #ffffff !important;
+      stroke: #000000 !important;
+      stroke-width: 2px !important;
+    }
+    .mermaid .entityLabel {
+      font-family: 'Inter', sans-serif !important;
+      font-weight: 600 !important;
+      fill: #000000 !important;
+    }
+    .mermaid .relationshipLabel {
+      font-family: 'Inter', sans-serif !important;
+      font-size: 11px !important;
+      fill: #222222 !important;
+    }
+    .mermaid .attributeBox {
+      fill: #fafafa !important;
+      stroke: #000000 !important;
+      stroke-width: 1px !important;
+    }
+    .footer {
+      margin-top: 30px;
+      font-size: 12px;
+      color: #777777;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+  </style>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'neutral',
+      securityLevel: 'loose',
+      themeVariables: {
+        background: '#ffffff',
+        primaryColor: '#ffffff',
+        primaryTextColor: '#000000',
+        primaryBorderColor: '#000000',
+        lineColor: '#000000',
+        secondaryColor: '#ffffff',
+        tertiaryColor: '#ffffff'
+      },
+      er: {
+        useMaxWidth: false,
+        fontSize: 12,
+        fontFamily: 'Inter, system-ui, sans-serif'
+      }
+    });
+  </script>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>ShoeStore Sneaker E-Commerce</h1>
+    <p>Entity Relationship Diagram (ERD) — Database Architecture</p>
+  </div>
+  
+  <div id="erd-diagram" class="mermaid">
+erDiagram
+    users {
+        int id PK
+        varchar name
+        varchar username
+        varchar email
+        varchar password
+        enum role
+        varchar phone
+        text address
+        timestamp created_at
+    }
+    products {
+        int id PK
+        int brand_id FK
+        int category_id FK
+        varchar name
+        text description
+        decimal price
+        varchar brand
+        varchar category
+        timestamp created_at
+    }
+    brands {
+        int id PK
+        varchar name
+        timestamp created_at
+    }
+    categories {
+        int id PK
+        varchar name
+        varchar slug
+        text description
+        timestamp created_at
+    }
+    product_images {
+        int id PK
+        int product_id FK
+        varchar image_url
+        tinyint is_primary
+    }
+    cart_items {
+        int id PK
+        int user_id FK
+        int product_id FK
+        int quantity
+    }
+    comments {
+        int id PK
+        int user_id FK
+        int product_id FK
+        int rating
+        text comment
+        timestamp created_at
+    }
+    product_reviews {
+        int id PK
+        int product_id FK
+        int user_id FK
+        varchar reviewer_name
+        int rating
+        text comment
+        timestamp created_at
+    }
+    wishlist {
+        int id PK
+        int user_id FK
+        int product_id FK
+        timestamp created_at
+    }
+    orders {
+        int id PK
+        int user_id FK
+        decimal total_amount
+        enum status
+        enum payment_method
+        varchar shipping_name
+        varchar shipping_phone
+        text shipping_address
+        timestamp created_at
+    }
+    order_items {
+        int id PK
+        int order_id FK
+        int product_id FK
+        int quantity
+        decimal price
+        int size
+    }
+    return_requests {
+        int id PK
+        int order_id FK
+        int user_id FK
+        text reason
+        enum status
+        text admin_note
+        timestamp created_at
+    }
+    messages {
+        int id PK
+        int user_id FK
+        varchar session_id
+        text message
+        tinyint is_from_admin
+        timestamp created_at
+    }
+    %% Relationships
+    brands ||--o{ products : "manufactures"
+    categories ||--o{ products : "classifies"
+    products ||--|{ product_images : "has_images"
+    
+    users ||--o{ cart_items : "adds_to_cart"
+    products ||--o{ cart_items : "in_cart"
+    
+    users ||--o{ wishlist : "adds_to_wishlist"
+    products ||--o{ wishlist : "in_wishlist"
+    
+    users ||--o{ comments : "writes_comment"
+    products ||--o{ comments : "commented_on"
+    
+    users ||--o{ product_reviews : "submits_review"
+    products ||--o{ product_reviews : "reviewed_on"
+    
+    users ||--o{ orders : "places_order"
+    orders ||--|{ order_items : "contains"
+    products ||--o{ order_items : "ordered"
+    
+    orders ||--o| return_requests : "requests_return"
+    users ||--o{ return_requests : "initiates_return"
+    
+    users |o--o{ messages : "sends_message"
+  </div>
+  
+  <div class="footer">
+    University Software Engineering Project — Academic Database Specification
+  </div>
+</div>
+</body>
+</html>

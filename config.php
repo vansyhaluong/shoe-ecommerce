@@ -3,6 +3,7 @@ ob_start();
 session_start();
 
 include_once 'languages.php';
+include_once 'helpers/validation.php';
 
 // Xử lý chuyển đổi ngôn ngữ
 if (isset($_GET['lang'])) {
