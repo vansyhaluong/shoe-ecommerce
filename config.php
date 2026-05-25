@@ -38,13 +38,13 @@ function format_price($price)
 {
     return number_format($price, 0, ',', '.') . 'đ';
 }
-
+// hàm chuyển trang
 function redirect($url)
 {
     header("Location: " . $url);
     exit();
 }
-
+// hàm kiểm tra role admin
 function check_admin()
 {
     if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'admin') {

@@ -3,6 +3,7 @@ include 'config.php';
 
 $action = $_GET['action'] ?? '';
 
+// thêm giỏ hàng
 if ($action === 'add') {
     $product_id = (int)($_POST['product_id'] ?? 0);
     $size = (int)($_POST['size'] ?? 40);
@@ -17,7 +18,7 @@ if ($action === 'add') {
         }
 
         if (!isset($_SESSION['cart'])) $_SESSION['cart'] = [];
-        
+
         $cart_key = $product_id . '_' . $size;
         if (isset($_SESSION['cart'][$cart_key])) {
             $_SESSION['cart'][$cart_key] += $quantity;
@@ -28,6 +29,7 @@ if ($action === 'add') {
     redirect('cart.php');
 }
 
+// cập nhật số lượng
 if ($action === 'update') {
     $cart_key = $_POST['cart_key'] ?? '';
     $quantity = (int)($_POST['quantity'] ?? 0);
@@ -46,6 +48,7 @@ if ($action === 'update') {
     redirect('cart.php');
 }
 
+// xóa item khỏi giỏ hàng
 if ($action === 'remove') {
     $cart_key = $_GET['id'] ?? '';
     if (!empty($cart_key) && isset($_SESSION['cart'][$cart_key])) {
@@ -55,4 +58,3 @@ if ($action === 'remove') {
 }
 
 redirect('index.php');
-?>
